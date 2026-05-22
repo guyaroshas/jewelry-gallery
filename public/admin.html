@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ניהול גלריה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-box">
+    <h1>✨ ניהול גלריה</h1>
+    <p>הכנסי סיסמה כדי להמשיך</p>
+    <div class="form-group">
+      <input type="password" id="password-input" placeholder="סיסמה" />
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="login()">כניסה</button>
+    <p id="login-error" class="error-msg"></p>
+  </div>
+</div>
+
+<!-- Admin panel -->
+<div id="admin-panel" style="display:none">
+  <div class="admin-body">
+    <div class="admin-header">
+      <h1>✨ ניהול גלריה</h1>
+      <div style="display:flex;gap:0.5rem">
+        <a href="/" class="btn btn-secondary">לאתר</a>
+        <button class="btn btn-secondary" onclick="logout()">יציאה</button>
+      </div>
+    </div>
+
+    <!-- Upload new item -->
+    <div class="card">
+      <h2>הוספת פריט חדש</h2>
+      <div id="upload-msg"></div>
+
+      <div class="form-group">
+        <label>תמונה</label>
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="file-input" accept="image/*" onchange="previewImage(event)" />
+          <p>לחצי כאן לבחירת תמונה</p>
+          <small>JPG, PNG, WEBP עד 10MB</small>
+        </div>
+        <div class="image-preview" id="image-preview">
+          <img id="preview-img" src="" alt="תצוגה מקדימה" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>שם הפריט *</label>
+        <input type="text" id="item-name" placeholder="לדוגמה: עגיל זהב עם אבן ירוקה" />
+      </div>
+
+      <div class="form-group">
+        <label>תיאור (אופציונלי)</label>
+        <textarea id="item-desc" placeholder="תיאור קצר של הפריט..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>קטגוריה *</label>
+        <select id="item-category"></select>
+      </div>
+
+      <button class="btn btn-primary" onclick="uploadItem()">העלאת פריט</button>
+    </div>
+
+    <!-- Categories -->
+    <div class="card">
+      <h2>קטגוריות</h2>
+      <div id="cats-list" class="cats-list"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem">
+        <input type="text" id="new-cat-input" placeholder="שם קטגוריה חדשה" style="flex:1" />
+        <button class="btn btn-primary" onclick="addCategory()">הוספה</button>
+      </div>
+      <p id="cat-msg" style="margin-top:0.5rem;font-size:0.85rem"></p>
+    </div>
+
+    <!-- Items list -->
+    <div class="card">
+      <h2>כל הפריטים</h2>
+      <div id="items-list" class="items-list"></div>
+      <p id="items-empty" style="color:var(--text-light);font-size:0.9rem;display:none">אין פריטים עדיין</p>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

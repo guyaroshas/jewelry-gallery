@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>גלריית תכשיטים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>✨ גלריית תכשיטים ✨</h1>
+    <p class="subtitle">כל פריט עשוי ביד, מלב</p>
+  </header>
+
+  <nav id="categories-nav">
+    <button class="cat-btn active" data-category="">הכל</button>
+  </nav>
+
+  <main>
+    <div id="gallery" class="gallery-grid"></div>
+    <p id="empty-msg" class="empty-msg" style="display:none">אין פריטים בקטגוריה זו עדיין</p>
+  </main>
+
+  <div id="lightbox" class="lightbox" style="display:none">
+    <div class="lightbox-overlay" onclick="closeLightbox()"></div>
+    <div class="lightbox-content">
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+      <img id="lightbox-img" src="" alt="" />
+      <div class="lightbox-info">
+        <h2 id="lightbox-name"></h2>
+        <p id="lightbox-desc"></p>
+        <span id="lightbox-cat"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/admin.html" class="admin-link">ניהול</a>
+  </footer>
+
+  <script src="gallery.js"></script>
+</body>
+</html>
