@@ -207,8 +207,8 @@ app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => 
     writeJSON(ITEMS_FILE, items);
     res.json(item);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'שגיאה בהעלאה' });
+    console.error('Upload error:', err);
+    res.status(500).json({ error: err.message || err.error || 'שגיאה בהעלאה' });
   }
 });
 
