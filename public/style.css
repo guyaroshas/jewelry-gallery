@@ -96,10 +96,19 @@ header h1 {
 @media (max-width: 640px) {
   .hero {
     grid-template-columns: 1fr;
-    height: 60vh;
-    max-height: 480px;
+    height: auto;
+    max-height: none;
   }
-  .hero-side { display: none; }
+  .hero-img--large {
+    order: -1;
+    height: 62vw;
+  }
+  .hero-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    height: 36vw;
+  }
 }
 
 /* ─── Category nav (inside header) ─── */
