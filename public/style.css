@@ -95,7 +95,7 @@ header h1 {
 
 @media (max-width: 640px) {
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     height: auto;
     max-height: none;
   }
@@ -106,7 +106,7 @@ header h1 {
   .hero-side {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
+    grid-template-rows: 1fr !important;
     height: 36vw;
   }
 }
