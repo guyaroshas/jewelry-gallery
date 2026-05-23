@@ -145,12 +145,21 @@ main {
 
 .section-title {
   text-align: center;
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.25em;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--mid);
-  padding: 2.2rem 1rem 1.4rem;
+  color: var(--dark);
+  padding: 2.4rem 1rem 0.6rem;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  background: var(--accent);
+  margin: 0.6rem auto 1.2rem;
 }
 
 .cat-view .section-title { display: none; }
