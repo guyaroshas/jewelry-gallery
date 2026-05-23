@@ -1,11 +1,22 @@
 let token = sessionStorage.getItem('admin_token');
 
 async function init() {
-  if (token) {
-    const res = await fetch('/api/me', { headers: { 'x-session-token': token } });
+  const savedToken = token;
+  if (!savedToken) return;
+  try {
+    const res = await fetch('/api/me', { headers: { 'x-session-token': savedToken } });
     if (res.ok) {
-      showAdmin();
+      if (token === savedToken) showAdmin();
     } else {
+      // only clear if user hasn't already logged in with a new token
+      if (token === savedToken) {
+        sessionStorage.removeItem('admin_token');
+        token = null;
+      }
+    }
+  } catch {
+    // network error — let user log in manually
+    if (token === savedToken) {
       sessionStorage.removeItem('admin_token');
       token = null;
     }
@@ -324,7 +335,6 @@ async function addCategory() {
 }
 
 async function deleteCategory(name) {
-  if (!confirm(`למחוק את הקטגוריה "${name}"?`)) return;
   const res = await fetch('/api/categories/' + encodeURIComponent(name), {
     method: 'DELETE',
     headers: authHeaders(),
