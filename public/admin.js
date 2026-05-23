@@ -275,9 +275,12 @@ function renderCategories(cats) {
   el.innerHTML = cats.map(c => `
     <div class="cat-chip">
       <span>${c}</span>
-      <button onclick="deleteCategory('${c}')" title="מחיקת קטגוריה">✕</button>
+      <button class="del-cat-btn" data-name="${encodeURIComponent(c)}" title="מחיקת קטגוריה">✕</button>
     </div>
   `).join('');
+  el.querySelectorAll('.del-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCategory(decodeURIComponent(btn.dataset.name)));
+  });
 }
 
 async function addCategory() {
