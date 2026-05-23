@@ -62,6 +62,12 @@ const upload = USE_CLOUD
       fileFilter: FILE_FILTER,
     });
 
+// supports image + optional image2
+const uploadItems = upload.fields([
+  { name: 'image',  maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+]);
+
 // ── Local helpers ─────────────────────────────────────────────────────────────
 const readJSON  = f => JSON.parse(fs.readFileSync(f, 'utf8'));
 const writeJSON = (f, d) => fs.writeFileSync(f, JSON.stringify(d, null, 2), 'utf8');
@@ -121,16 +127,20 @@ async function cloudGetItems() {
     type: 'upload', prefix: `${FOLDER}/items/`, context: true, max_results: 500,
   });
   return result.resources
+    .filter(r => !r.public_id.endsWith('-2'))   // exclude secondary images
     .map(r => ({
-      id:          r.public_id.split('/').pop(),
-      publicId:    r.public_id,
-      name:        r.context?.custom?.name || '',
-      description: r.context?.custom?.description || '',
-      category:    r.context?.custom?.category || '',
-      bestSeller:  r.context?.custom?.bestSeller === 'true',
-      imageZoom:   parseFloat(r.context?.custom?.imageZoom) || 100,
-      image:       r.secure_url,
-      createdAt:   r.created_at,
+      id:           r.public_id.split('/').pop(),
+      publicId:     r.public_id,
+      name:         r.context?.custom?.name || '',
+      description:  r.context?.custom?.description || '',
+      category:     r.context?.custom?.category || '',
+      bestSeller:   r.context?.custom?.bestSeller === 'true',
+      imageZoom:    parseFloat(r.context?.custom?.imageZoom) || 100,
+      image2:       r.context?.custom?.image2 || '',
+      imageZoom2:   parseFloat(r.context?.custom?.imageZoom2) || 100,
+      primaryImage: parseInt(r.context?.custom?.primaryImage) || 1,
+      image:        r.secure_url,
+      createdAt:    r.created_at,
     }))
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
@@ -199,33 +209,54 @@ app.post('/api/logout', requireAuth, (req, res) => {
 });
 
 // ── Admin — items ─────────────────────────────────────────────────────────────
-app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'חסרה תמונה' });
-  const { name, description = '', category, bestSeller, imageZoom } = req.body;
+app.post('/api/items', requireAuth, uploadItems, async (req, res) => {
+  const file1 = req.files?.['image']?.[0];
+  const file2 = req.files?.['image2']?.[0];
+  if (!file1) return res.status(400).json({ error: 'חסרה תמונה' });
+  const { name, description = '', category, bestSeller, imageZoom, imageZoom2, primaryImage } = req.body;
   if (!name || !category) return res.status(400).json({ error: 'שם וקטגוריה הם שדות חובה' });
   const isBestSeller = bestSeller === 'true' || bestSeller === true;
-  const zoom = parseFloat(imageZoom) || 100;
+  const zoom  = parseFloat(imageZoom)  || 100;
+  const zoom2 = parseFloat(imageZoom2) || 100;
+  const primary = parseInt(primaryImage) || 1;
 
   try {
     if (USE_CLOUD) {
       const id = uuidv4();
-      const result = await uploadToCloudinary(req.file.buffer, {
+      // upload primary image
+      const result = await uploadToCloudinary(file1.buffer, {
         public_id: `${FOLDER}/items/${id}`,
-        context: { name, description, category, bestSeller: String(isBestSeller), imageZoom: String(zoom) },
+        context: { name, description, category, bestSeller: String(isBestSeller),
+                   imageZoom: String(zoom), imageZoom2: String(zoom2), primaryImage: String(primary) },
       });
-      return res.json({ id, name, description, category, bestSeller: isBestSeller, imageZoom: zoom, image: result.secure_url, createdAt: result.created_at });
+      let image2url = '';
+      // upload secondary image if provided
+      if (file2) {
+        const result2 = await uploadToCloudinary(file2.buffer, {
+          public_id: `${FOLDER}/items/${id}-2`, overwrite: true,
+        });
+        image2url = result2.secure_url;
+        // save image2 url into primary item context
+        await cloudinary.api.update(`${FOLDER}/items/${id}`, {
+          context: { name, description, category, bestSeller: String(isBestSeller),
+                     imageZoom: String(zoom), imageZoom2: String(zoom2),
+                     primaryImage: String(primary), image2: image2url },
+        });
+      }
+      return res.json({ id, name, description, category, bestSeller: isBestSeller,
+                        imageZoom: zoom, image2: image2url, imageZoom2: zoom2,
+                        primaryImage: primary, image: result.secure_url, createdAt: result.created_at });
     }
 
     // Local
     const items = readJSON(ITEMS_FILE);
+    let image2url = '';
+    if (file2) image2url = '/uploads/' + file2.filename;
     const item = {
-      id:    uuidv4(),
-      name,
-      description,
-      category,
-      bestSeller: isBestSeller,
-      imageZoom:  zoom,
-      image:     '/uploads/' + req.file.filename,
+      id: uuidv4(), name, description, category,
+      bestSeller: isBestSeller, imageZoom: zoom,
+      image2: image2url, imageZoom2: zoom2, primaryImage: primary,
+      image: '/uploads/' + file1.filename,
       createdAt: new Date().toISOString(),
     };
     items.unshift(item);
@@ -302,39 +333,53 @@ app.patch('/api/hero', requireAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'שגיאה' }); }
 });
 
-app.put('/api/items/:id', requireAuth, upload.single('image'), async (req, res) => {
-  const { name, description = '', category, imageZoom } = req.body;
+app.put('/api/items/:id', requireAuth, uploadItems, async (req, res) => {
+  const file1 = req.files?.['image']?.[0];
+  const file2 = req.files?.['image2']?.[0];
+  const { name, description = '', category, imageZoom, imageZoom2, primaryImage } = req.body;
   if (!name || !category) return res.status(400).json({ error: 'שם וקטגוריה הם שדות חובה' });
-  const zoom = parseFloat(imageZoom) || 100;
+  const zoom  = parseFloat(imageZoom)  || 100;
+  const zoom2 = parseFloat(imageZoom2) || 100;
+  const primary = parseInt(primaryImage) || 1;
   try {
     if (USE_CLOUD) {
-      // preserve existing bestSeller when updating
       const existing = await cloudinary.api.resource(`${FOLDER}/items/${req.params.id}`, { context: true });
       const ctx = existing.context?.custom || {};
-      const newCtx = { ...ctx, name, description, category, imageZoom: String(zoom) };
-      if (req.file) {
-        const result = await uploadToCloudinary(req.file.buffer, {
-          public_id: `${FOLDER}/items/${req.params.id}`,
-          overwrite: true,
-          context: newCtx,
+      let image2url = ctx.image2 || '';
+      if (file2) {
+        const r2 = await uploadToCloudinary(file2.buffer, {
+          public_id: `${FOLDER}/items/${req.params.id}-2`, overwrite: true,
         });
-        return res.json({ id: req.params.id, name, description, category, imageZoom: zoom, image: result.secure_url });
+        image2url = r2.secure_url;
+      }
+      const newCtx = { ...ctx, name, description, category,
+                       imageZoom: String(zoom), imageZoom2: String(zoom2),
+                       primaryImage: String(primary), image2: image2url };
+      if (file1) {
+        const result = await uploadToCloudinary(file1.buffer, {
+          public_id: `${FOLDER}/items/${req.params.id}`, overwrite: true, context: newCtx,
+        });
+        return res.json({ id: req.params.id, name, description, category,
+                          imageZoom: zoom, image2: image2url, imageZoom2: zoom2,
+                          primaryImage: primary, image: result.secure_url });
       }
       await cloudinary.api.update(`${FOLDER}/items/${req.params.id}`, { context: newCtx });
       const r = await cloudinary.api.resource(`${FOLDER}/items/${req.params.id}`);
-      return res.json({ id: req.params.id, name, description, category, imageZoom: zoom, image: r.secure_url });
+      return res.json({ id: req.params.id, name, description, category,
+                        imageZoom: zoom, image2: image2url, imageZoom2: zoom2,
+                        primaryImage: primary, image: r.secure_url });
     }
     const items = readJSON(ITEMS_FILE);
     const idx = items.findIndex(i => i.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'פריט לא נמצא' });
-    const oldImage = items[idx].image;
-    items[idx] = { ...items[idx], name, description, category, imageZoom: zoom };
-    if (req.file) {
-      if (oldImage.startsWith('/uploads/') && fs.existsSync(path.join(__dirname, oldImage.slice(1)))) {
-        fs.unlinkSync(path.join(__dirname, oldImage.slice(1)));
-      }
-      items[idx].image = '/uploads/' + req.file.filename;
+    items[idx] = { ...items[idx], name, description, category, imageZoom: zoom, imageZoom2: zoom2, primaryImage: primary };
+    if (file1) {
+      const old = items[idx].image;
+      if (old?.startsWith('/uploads/') && fs.existsSync(path.join(__dirname, old.slice(1))))
+        fs.unlinkSync(path.join(__dirname, old.slice(1)));
+      items[idx].image = '/uploads/' + file1.filename;
     }
+    if (file2) items[idx].image2 = '/uploads/' + file2.filename;
     writeJSON(ITEMS_FILE, items);
     res.json(items[idx]);
   } catch (err) { console.error(err); res.status(500).json({ error: 'שגיאה בעדכון' }); }
@@ -344,6 +389,7 @@ app.delete('/api/items/:id', requireAuth, async (req, res) => {
   try {
     if (USE_CLOUD) {
       await cloudinary.uploader.destroy(`${FOLDER}/items/${req.params.id}`);
+      try { await cloudinary.uploader.destroy(`${FOLDER}/items/${req.params.id}-2`); } catch {}
       return res.json({ ok: true });
     }
     let items = readJSON(ITEMS_FILE);

@@ -84,6 +84,33 @@
         <select id="item-category"></select>
       </div>
 
+      <!-- Second image -->
+      <div class="form-group" style="margin-top:0.5rem">
+        <label>תמונה על דוגמנית <small style="color:var(--mid)">(אופציונלי)</small></label>
+        <div class="upload-area upload-area-sm" id="upload-area-2">
+          <input type="file" id="file-input-2" accept="image/*" onchange="previewImage2(event)" />
+          <p>לחצי לתמונה שנייה</p>
+        </div>
+        <div class="image-preview" id="image-preview-2">
+          <div id="preview-img-2" class="preview-bg-img"></div>
+        </div>
+        <div class="upload-zoom-controls" id="upload-zoom-controls-2" style="display:none">
+          <div class="zoom-wrap">
+            <span class="zoom-label">זום</span>
+            <input type="range" min="50" max="250" value="100" id="upload-zoom-input-2" class="zoom-slider" oninput="updateUploadZoom2(this)" />
+            <span class="zoom-val" id="upload-zoom-val-2">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group primary-select-group" id="primary-select-group" style="display:none">
+        <label>תמונה ראשונה בגלריה</label>
+        <div class="primary-toggle">
+          <button type="button" class="btn primary-toggle-btn active" id="pt-btn-1" onclick="setPrimary(1)">תמונת פריט</button>
+          <button type="button" class="btn primary-toggle-btn" id="pt-btn-2" onclick="setPrimary(2)">תמונת דוגמנית</button>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="checkbox-label">
           <input type="checkbox" id="item-bestseller" />
@@ -149,6 +176,32 @@
       <label>קטגוריה *</label>
       <select id="edit-category"></select>
     </div>
+
+    <!-- Second image in edit modal -->
+    <div class="form-group" style="margin-top:0.5rem">
+      <label>תמונה על דוגמנית <small style="color:var(--mid)">(אופציונלי)</small></label>
+      <div class="upload-area upload-area-sm" onclick="document.getElementById('edit-file-input-2').click()">
+        <p>לחצי לתמונה שנייה</p>
+      </div>
+      <input type="file" id="edit-file-input-2" accept="image/*" onchange="editPreviewImage2(event)" style="display:none" />
+      <div class="image-preview" id="edit-preview-2">
+        <div id="edit-preview-img-2" class="preview-bg-img"></div>
+      </div>
+      <div class="zoom-wrap" id="edit-zoom-wrap-2" style="margin-top:0.7rem;display:none">
+        <span class="zoom-label">זום</span>
+        <input type="range" min="50" max="250" value="100" id="edit-zoom-input-2" class="zoom-slider" oninput="updateEditZoom2(this)" />
+        <span class="zoom-val" id="edit-zoom-val-2">100%</span>
+      </div>
+    </div>
+
+    <div class="form-group primary-select-group" id="edit-primary-group" style="display:none">
+      <label>תמונה ראשונה בגלריה</label>
+      <div class="primary-toggle">
+        <button type="button" class="btn primary-toggle-btn" id="ep-btn-1" onclick="setEditPrimary(1)">תמונת פריט</button>
+        <button type="button" class="btn primary-toggle-btn" id="ep-btn-2" onclick="setEditPrimary(2)">תמונת דוגמנית</button>
+      </div>
+    </div>
+
     <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem">
       <button class="btn btn-secondary" onclick="closeEditModal()">ביטול</button>
       <button class="btn btn-primary" onclick="saveEdit()">שמירה</button>

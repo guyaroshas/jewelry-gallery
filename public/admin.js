@@ -178,6 +178,8 @@ function openEditModal(item) {
   editingId = item.id;
   document.getElementById('edit-name').value = item.name;
   document.getElementById('edit-desc').value = item.description || '';
+
+  // image 1
   const prevImg = document.getElementById('edit-preview-img');
   prevImg.style.backgroundImage = `url(${item.image})`;
   const zoom = item.imageZoom || 100;
@@ -186,7 +188,29 @@ function openEditModal(item) {
   document.getElementById('edit-zoom-val').textContent = zoom + '%';
   document.getElementById('edit-preview').style.display = 'block';
   document.getElementById('edit-file-input').value = '';
-  // Copy categories from the upload form select
+
+  // image 2
+  const prevImg2 = document.getElementById('edit-preview-img-2');
+  if (item.image2) {
+    prevImg2.style.backgroundImage = `url(${item.image2})`;
+    const zoom2 = item.imageZoom2 || 100;
+    prevImg2.style.backgroundSize = zoom2 + '%';
+    document.getElementById('edit-zoom-input-2').value = zoom2;
+    document.getElementById('edit-zoom-val-2').textContent = zoom2 + '%';
+    document.getElementById('edit-preview-2').style.display = 'block';
+    document.getElementById('edit-zoom-wrap-2').style.display = 'flex';
+    document.getElementById('edit-primary-group').style.display = 'block';
+  } else {
+    prevImg2.style.backgroundImage = '';
+    document.getElementById('edit-preview-2').style.display = 'none';
+    document.getElementById('edit-zoom-wrap-2').style.display = 'none';
+    document.getElementById('edit-primary-group').style.display = 'none';
+  }
+  document.getElementById('edit-file-input-2').value = '';
+  editPrimary = item.primaryImage || 1;
+  setEditPrimary(editPrimary);
+
+  // Copy categories
   const src = document.getElementById('item-category');
   const dst = document.getElementById('edit-category');
   dst.innerHTML = src.innerHTML;
@@ -198,6 +222,29 @@ function updateEditZoom(input) {
   const zoom = parseInt(input.value);
   document.getElementById('edit-zoom-val').textContent = zoom + '%';
   document.getElementById('edit-preview-img').style.backgroundSize = zoom + '%';
+}
+
+function editPreviewImage2(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const img = document.getElementById('edit-preview-img-2');
+  img.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
+  document.getElementById('edit-preview-2').style.display = 'block';
+  document.getElementById('edit-zoom-wrap-2').style.display = 'flex';
+  document.getElementById('edit-primary-group').style.display = 'block';
+}
+
+function updateEditZoom2(input) {
+  const zoom = parseInt(input.value);
+  document.getElementById('edit-zoom-val-2').textContent = zoom + '%';
+  document.getElementById('edit-preview-img-2').style.backgroundSize = zoom + '%';
+}
+
+let editPrimary = 1;
+function setEditPrimary(n) {
+  editPrimary = n;
+  document.getElementById('ep-btn-1').classList.toggle('active', n === 1);
+  document.getElementById('ep-btn-2').classList.toggle('active', n === 2);
 }
 
 function closeEditModal() {
@@ -217,15 +264,20 @@ async function saveEdit() {
   const name = document.getElementById('edit-name').value.trim();
   const description = document.getElementById('edit-desc').value.trim();
   const category = document.getElementById('edit-category').value;
-  const imageZoom = document.getElementById('edit-zoom-input').value || 100;
-  const file = document.getElementById('edit-file-input').files[0];
+  const imageZoom  = document.getElementById('edit-zoom-input').value || 100;
+  const imageZoom2 = document.getElementById('edit-zoom-input-2').value || 100;
+  const file  = document.getElementById('edit-file-input').files[0];
+  const file2 = document.getElementById('edit-file-input-2').files[0];
   if (!name || !category) { alert('יש למלא שם וקטגוריה'); return; }
   const formData = new FormData();
   formData.append('name', name);
   formData.append('description', description);
   formData.append('category', category);
   formData.append('imageZoom', imageZoom);
-  if (file) formData.append('image', file);
+  formData.append('imageZoom2', imageZoom2);
+  formData.append('primaryImage', editPrimary);
+  if (file)  formData.append('image', file);
+  if (file2) formData.append('image2', file2);
   const res = await fetch('/api/items/' + editingId, {
     method: 'PUT', headers: authHeaders(), body: formData,
   });
@@ -254,6 +306,34 @@ function updateUploadZoom(input) {
   document.getElementById('preview-img').style.backgroundSize = zoom + '%';
 }
 
+// ── Second image (upload form) ─────────────────────────────────────────────
+let selectedPrimary = 1;
+
+function previewImage2(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const img = document.getElementById('preview-img-2');
+  img.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
+  document.getElementById('image-preview-2').style.display = 'block';
+  document.getElementById('upload-zoom-input-2').value = 100;
+  document.getElementById('upload-zoom-val-2').textContent = '100%';
+  img.style.backgroundSize = '100%';
+  document.getElementById('upload-zoom-controls-2').style.display = 'block';
+  document.getElementById('primary-select-group').style.display = 'block';
+}
+
+function updateUploadZoom2(input) {
+  const zoom = parseInt(input.value);
+  document.getElementById('upload-zoom-val-2').textContent = zoom + '%';
+  document.getElementById('preview-img-2').style.backgroundSize = zoom + '%';
+}
+
+function setPrimary(n) {
+  selectedPrimary = n;
+  document.getElementById('pt-btn-1').classList.toggle('active', n === 1);
+  document.getElementById('pt-btn-2').classList.toggle('active', n === 2);
+}
+
 // Drag-over style
 const uploadArea = document.getElementById('upload-area');
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
@@ -276,8 +356,10 @@ async function uploadItem() {
   const name = document.getElementById('item-name').value.trim();
   const description = document.getElementById('item-desc').value.trim();
   const category = document.getElementById('item-category').value;
+  const file2      = document.getElementById('file-input-2').files[0];
   const bestSeller = document.getElementById('item-bestseller').checked;
   const imageZoom  = document.getElementById('upload-zoom-input').value || 100;
+  const imageZoom2 = document.getElementById('upload-zoom-input-2').value || 100;
   const msgEl = document.getElementById('upload-msg');
 
   if (!file || !name || !category) {
@@ -292,6 +374,9 @@ async function uploadItem() {
   formData.append('category', category);
   formData.append('bestSeller', bestSeller);
   formData.append('imageZoom', imageZoom);
+  formData.append('imageZoom2', imageZoom2);
+  formData.append('primaryImage', selectedPrimary);
+  if (file2) formData.append('image2', file2);
 
   const res = await fetch('/api/items', {
     method: 'POST',
@@ -309,6 +394,12 @@ async function uploadItem() {
     document.getElementById('upload-zoom-val').textContent = '100%';
     document.getElementById('image-preview').style.display = 'none';
     document.getElementById('upload-zoom-controls').style.display = 'none';
+    document.getElementById('file-input-2').value = '';
+    document.getElementById('image-preview-2').style.display = 'none';
+    document.getElementById('upload-zoom-controls-2').style.display = 'none';
+    document.getElementById('primary-select-group').style.display = 'none';
+    selectedPrimary = 1;
+    setPrimary(1);
     setTimeout(() => (msgEl.innerHTML = ''), 3000);
     loadItems();
   } else {

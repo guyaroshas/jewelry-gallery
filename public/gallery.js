@@ -50,10 +50,11 @@ function renderItems(items) {
   items.forEach(item => {
     const card = document.createElement('div');
     card.className = 'item-card';
-    const zoom = item.imageZoom || 100;
-    const pos  = item.imagePosition || 'center center';
+    const showImg2 = item.primaryImage === 2 && item.image2;
+    const displayImg  = showImg2 ? item.image2 : item.image;
+    const displayZoom = showImg2 ? (item.imageZoom2 || 100) : (item.imageZoom || 100);
     card.innerHTML = `
-      <div class="item-img-wrap" style="background-image:url('${item.image}');background-size:${zoom}%;background-position:${pos}">
+      <div class="item-img-wrap" style="background-image:url('${displayImg}');background-size:${displayZoom}%;background-position:center center">
         ${item.bestSeller ? '<span class="bs-badge">★ Best Seller</span>' : ''}
       </div>
     `;
@@ -62,18 +63,41 @@ function renderItems(items) {
   });
 }
 
+let lbItem = null;
+
 function openLightbox(item) {
-  document.getElementById('lightbox-img').src = item.image;
+  lbItem = item;
+  const startN = (item.primaryImage === 2 && item.image2) ? 2 : 1;
+  setLightboxImg(startN);
+
   document.getElementById('lightbox-name').textContent = item.name;
   document.getElementById('lightbox-desc').textContent = item.description || '';
-  document.getElementById('lightbox-cat').innerHTML = `<span class="item-tag">${item.category}</span>`;
+  document.getElementById('lightbox-cat').innerHTML = item.category ? `<span class="item-tag">${item.category}</span>` : '';
+
+  const thumbsEl = document.getElementById('lightbox-thumbs');
+  if (item.image2) {
+    document.getElementById('lb-thumb-1').style.backgroundImage = `url('${item.image}')`;
+    document.getElementById('lb-thumb-2').style.backgroundImage = `url('${item.image2}')`;
+    thumbsEl.style.display = 'flex';
+  } else {
+    thumbsEl.style.display = 'none';
+  }
+
   document.getElementById('lightbox').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+function setLightboxImg(n) {
+  const src = (n === 2 && lbItem?.image2) ? lbItem.image2 : lbItem?.image;
+  document.getElementById('lightbox-img').src = src || '';
+  document.getElementById('lb-thumb-1')?.classList.toggle('active', n === 1);
+  document.getElementById('lb-thumb-2')?.classList.toggle('active', n === 2);
 }
 
 function closeLightbox() {
   document.getElementById('lightbox').style.display = 'none';
   document.body.style.overflow = '';
+  lbItem = null;
 }
 
 document.addEventListener('keydown', e => {

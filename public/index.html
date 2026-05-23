@@ -48,6 +48,10 @@
     <div class="lightbox-content">
       <button class="lightbox-close" onclick="closeLightbox()">✕</button>
       <img id="lightbox-img" src="" alt="" />
+      <div id="lightbox-thumbs" class="lightbox-thumbs" style="display:none">
+        <div class="lb-thumb" id="lb-thumb-1" onclick="setLightboxImg(1)"></div>
+        <div class="lb-thumb" id="lb-thumb-2" onclick="setLightboxImg(2)"></div>
+      </div>
       <div class="lightbox-info">
         <h2 id="lightbox-name"></h2>
         <p id="lightbox-desc"></p>
