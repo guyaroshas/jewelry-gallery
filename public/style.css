@@ -56,12 +56,12 @@ header h1 {
 }
 
 .subtitle {
-  color: var(--mid);
-  font-size: 0.73rem;
+  color: var(--dark);
+  font-size: 0.85rem;
   font-weight: 300;
-  letter-spacing: 0.12em;
-  margin-top: 0.3rem;
-  margin-bottom: 0.9rem;
+  letter-spacing: 0.18em;
+  margin-top: 0.4rem;
+  margin-bottom: 1rem;
 }
 
 /* ─── Hero ─── */
