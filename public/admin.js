@@ -1,6 +1,17 @@
 let token = sessionStorage.getItem('admin_token');
 
-if (token) showAdmin();
+async function init() {
+  if (token) {
+    const res = await fetch('/api/me', { headers: { 'x-session-token': token } });
+    if (res.ok) {
+      showAdmin();
+    } else {
+      sessionStorage.removeItem('admin_token');
+      token = null;
+    }
+  }
+}
+init();
 
 async function login() {
   const password = document.getElementById('password-input').value;

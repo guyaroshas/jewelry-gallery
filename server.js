@@ -157,6 +157,8 @@ app.get('/api/hero', (req, res) => {
 });
 
 // ── Auth routes ───────────────────────────────────────────────────────────────
+app.get('/api/me', requireAuth, (req, res) => res.json({ ok: true }));
+
 app.post('/api/login', (req, res) => {
   if (req.body.password !== ADMIN_PASSWORD)
     return res.status(401).json({ error: 'סיסמה שגויה' });
