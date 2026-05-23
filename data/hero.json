@@ -1,0 +1,9 @@
+{
+  "slots": [
+    { "url": "https://images.unsplash.com/photo-1746211516723-c4cd447ec665?w=900&h=1100&fit=crop&q=85", "position": "center center", "zoom": 100 },
+    { "url": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=700&h=540&fit=crop&q=85", "position": "center center", "zoom": 100 },
+    { "url": "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=700&h=540&fit=crop&q=85", "position": "center center", "zoom": 100 }
+  ],
+  "colLeft": 50,
+  "rowTop": 50
+}

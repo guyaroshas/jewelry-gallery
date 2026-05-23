@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ניהול גלריה</title>
+  <title>גאליס — ניהול</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -13,7 +13,11 @@
 <!-- Login screen -->
 <div id="login-screen" class="login-wrap">
   <div class="login-box">
-    <h1>✨ ניהול גלריה</h1>
+    <svg style="width:58px;height:auto;color:#1c1c1c;margin-bottom:0.6rem" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 50,72 C 22,56 4,38 4,22 C 4,8 14,2 26,4 C 36,6 46,16 50,26 C 54,16 64,6 74,4 C 86,2 96,8 96,22 C 96,38 78,56 50,72 Z"
+            fill="currentColor"/>
+    </svg>
+    <h1>גאליס</h1>
     <p>הכנסי סיסמה כדי להמשיך</p>
     <div class="form-group">
       <input type="password" id="password-input" placeholder="סיסמה" />
@@ -27,11 +31,18 @@
 <div id="admin-panel" style="display:none">
   <div class="admin-body">
     <div class="admin-header">
-      <h1>✨ ניהול גלריה</h1>
+      <h1>ניהול גלריה</h1>
       <div style="display:flex;gap:0.5rem">
         <a href="/" class="btn btn-secondary">לאתר</a>
         <button class="btn btn-secondary" onclick="logout()">יציאה</button>
       </div>
+    </div>
+
+    <!-- Hero images -->
+    <div class="card">
+      <h2>תמונות ראשיות</h2>
+      <p style="font-size:0.82rem;color:var(--mid);margin-bottom:1rem">שלוש התמונות שמופיעות בדף הבית</p>
+      <div class="hero-slots" id="hero-slots"></div>
     </div>
 
     <!-- Upload new item -->
@@ -85,6 +96,43 @@
       <h2>כל הפריטים</h2>
       <div id="items-list" class="items-list"></div>
       <p id="items-empty" style="color:var(--text-light);font-size:0.9rem;display:none">אין פריטים עדיין</p>
+    </div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div id="edit-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>עריכת פריט</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>תמונה חדשה (אופציונלי)</label>
+      <div class="upload-area" onclick="document.getElementById('edit-file-input').click()">
+        <p>לחצי לבחירת תמונה חדשה</p>
+        <small>JPG, PNG, WEBP עד 10MB</small>
+      </div>
+      <input type="file" id="edit-file-input" accept="image/*" onchange="editPreviewImage(event)" style="display:none" />
+      <div class="image-preview" id="edit-preview">
+        <img id="edit-preview-img" src="" alt="תצוגה מקדימה" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>שם הפריט *</label>
+      <input type="text" id="edit-name" />
+    </div>
+    <div class="form-group">
+      <label>תיאור</label>
+      <textarea id="edit-desc"></textarea>
+    </div>
+    <div class="form-group">
+      <label>קטגוריה *</label>
+      <select id="edit-category"></select>
+    </div>
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-secondary" onclick="closeEditModal()">ביטול</button>
+      <button class="btn btn-primary" onclick="saveEdit()">שמירה</button>
     </div>
   </div>
 </div>

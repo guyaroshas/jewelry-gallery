@@ -3,26 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>גלריית תכשיטים</title>
+  <title>גאליס</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>if(new URLSearchParams(location.search).get('cat'))document.documentElement.classList.add('cat-view');</script>
 </head>
 <body>
+
   <header>
-    <h1>✨ גלריית תכשיטים ✨</h1>
-    <p class="subtitle">כל פריט עשוי ביד, מלב</p>
+    <a href="/" class="logo-link">
+      <svg class="logo-svg" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M 50,72 C 22,56 4,38 4,22 C 4,8 14,2 26,4 C 36,6 46,16 50,26 C 54,16 64,6 74,4 C 86,2 96,8 96,22 C 96,38 78,56 50,72 Z"
+              fill="currentColor"/>
+      </svg>
+      <h1>גאליס</h1>
+    </a>
+    <p class="subtitle">עבודת יד שנוגעת ללב</p>
+
+    <nav id="categories-nav">
+      <button class="cat-btn active" data-category="">הכל</button>
+    </nav>
   </header>
 
-  <nav id="categories-nav">
-    <button class="cat-btn active" data-category="">הכל</button>
-  </nav>
+  <!-- Hero — direction:ltr: first=LEFT, second=RIGHT -->
+  <section class="hero">
+    <div class="hero-side">
+      <div class="hero-img" id="hero-0"></div>
+      <div class="hero-img" id="hero-1"></div>
+    </div>
+    <div class="hero-img hero-img--large" id="hero-2"></div>
+  </section>
 
+  <!-- Product gallery — images only -->
   <main>
+    <div class="section-title" id="gallery-title">Best Seller</div>
     <div id="gallery" class="gallery-grid"></div>
     <p id="empty-msg" class="empty-msg" style="display:none">אין פריטים בקטגוריה זו עדיין</p>
   </main>
 
+  <!-- Lightbox -->
   <div id="lightbox" class="lightbox" style="display:none">
     <div class="lightbox-overlay" onclick="closeLightbox()"></div>
     <div class="lightbox-content">
