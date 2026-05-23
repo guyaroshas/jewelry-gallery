@@ -173,17 +173,18 @@ app.post('/api/logout', requireAuth, (req, res) => {
 // ── Admin — items ─────────────────────────────────────────────────────────────
 app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'חסרה תמונה' });
-  const { name, description = '', category } = req.body;
+  const { name, description = '', category, bestSeller } = req.body;
   if (!name || !category) return res.status(400).json({ error: 'שם וקטגוריה הם שדות חובה' });
+  const isBestSeller = bestSeller === 'true' || bestSeller === true;
 
   try {
     if (USE_CLOUD) {
       const id = uuidv4();
       const result = await uploadToCloudinary(req.file.buffer, {
         public_id: `${FOLDER}/items/${id}`,
-        context: { name, description, category },
+        context: { name, description, category, bestSeller: String(isBestSeller) },
       });
-      return res.json({ id, name, description, category, image: result.secure_url, createdAt: result.created_at });
+      return res.json({ id, name, description, category, bestSeller: isBestSeller, image: result.secure_url, createdAt: result.created_at });
     }
 
     // Local
@@ -193,6 +194,7 @@ app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => 
       name,
       description,
       category,
+      bestSeller: isBestSeller,
       image:     '/uploads/' + req.file.filename,
       createdAt: new Date().toISOString(),
     };

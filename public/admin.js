@@ -229,6 +229,7 @@ async function uploadItem() {
   const name = document.getElementById('item-name').value.trim();
   const description = document.getElementById('item-desc').value.trim();
   const category = document.getElementById('item-category').value;
+  const bestSeller = document.getElementById('item-bestseller').checked;
   const msgEl = document.getElementById('upload-msg');
 
   if (!file || !name || !category) {
@@ -241,6 +242,7 @@ async function uploadItem() {
   formData.append('name', name);
   formData.append('description', description);
   formData.append('category', category);
+  formData.append('bestSeller', bestSeller);
 
   const res = await fetch('/api/items', {
     method: 'POST',
@@ -253,6 +255,7 @@ async function uploadItem() {
     document.getElementById('file-input').value = '';
     document.getElementById('item-name').value = '';
     document.getElementById('item-desc').value = '';
+    document.getElementById('item-bestseller').checked = false;
     document.getElementById('image-preview').style.display = 'none';
     setTimeout(() => (msgEl.innerHTML = ''), 3000);
     loadItems();
@@ -344,14 +347,24 @@ async function loadItems() {
         <small>${item.category}${item.description ? ' · ' + item.description : ''}</small>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.3rem">
-        <button class="btn bs-btn ${item.bestSeller ? 'bs-active' : ''}" onclick="toggleBestSeller('${item.id}')">
+        <button class="btn bs-btn ${item.bestSeller ? 'bs-active' : ''}" data-id="${item.id}" data-action="toggle-bs">
           ${item.bestSeller ? '★' : '☆'} best seller
         </button>
-        <button class="btn btn-secondary" onclick="openEditModal(adminItems.find(i=>i.id==='${item.id}'))">עריכה</button>
-        <button class="btn btn-danger" onclick="deleteItem('${item.id}')">מחיקה</button>
+        <button class="btn btn-secondary" data-id="${item.id}" data-action="edit">עריכה</button>
+        <button class="btn btn-danger" data-id="${item.id}" data-action="delete">מחיקה</button>
       </div>
     </div>
   `).join('');
+
+  list.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'toggle-bs') toggleBestSeller(id);
+      else if (action === 'edit') openEditModal(adminItems.find(i => i.id === id));
+      else if (action === 'delete') deleteItem(id);
+    });
+  });
 }
 
 async function toggleBestSeller(id) {
@@ -374,7 +387,6 @@ async function toggleBestSeller(id) {
 }
 
 async function deleteItem(id) {
-  if (!confirm('למחוק את הפריט?')) return;
   const res = await fetch('/api/items/' + id, {
     method: 'DELETE',
     headers: authHeaders(),
