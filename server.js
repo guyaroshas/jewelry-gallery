@@ -105,6 +105,7 @@ async function cloudGetItems() {
       description: r.context?.custom?.description || '',
       category:    r.context?.custom?.category || '',
       bestSeller:  r.context?.custom?.bestSeller === 'true',
+      imageZoom:   parseFloat(r.context?.custom?.imageZoom) || 100,
       image:       r.secure_url,
       createdAt:   r.created_at,
     }))
@@ -175,18 +176,19 @@ app.post('/api/logout', requireAuth, (req, res) => {
 // ── Admin — items ─────────────────────────────────────────────────────────────
 app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'חסרה תמונה' });
-  const { name, description = '', category, bestSeller } = req.body;
+  const { name, description = '', category, bestSeller, imageZoom } = req.body;
   if (!name || !category) return res.status(400).json({ error: 'שם וקטגוריה הם שדות חובה' });
   const isBestSeller = bestSeller === 'true' || bestSeller === true;
+  const zoom = parseFloat(imageZoom) || 100;
 
   try {
     if (USE_CLOUD) {
       const id = uuidv4();
       const result = await uploadToCloudinary(req.file.buffer, {
         public_id: `${FOLDER}/items/${id}`,
-        context: { name, description, category, bestSeller: String(isBestSeller) },
+        context: { name, description, category, bestSeller: String(isBestSeller), imageZoom: String(zoom) },
       });
-      return res.json({ id, name, description, category, bestSeller: isBestSeller, image: result.secure_url, createdAt: result.created_at });
+      return res.json({ id, name, description, category, bestSeller: isBestSeller, imageZoom: zoom, image: result.secure_url, createdAt: result.created_at });
     }
 
     // Local
@@ -197,6 +199,7 @@ app.post('/api/items', requireAuth, upload.single('image'), async (req, res) => 
       description,
       category,
       bestSeller: isBestSeller,
+      imageZoom:  zoom,
       image:     '/uploads/' + req.file.filename,
       createdAt: new Date().toISOString(),
     };
@@ -273,29 +276,33 @@ app.patch('/api/hero', requireAuth, async (req, res) => {
 });
 
 app.put('/api/items/:id', requireAuth, upload.single('image'), async (req, res) => {
-  const { name, description = '', category } = req.body;
+  const { name, description = '', category, imageZoom } = req.body;
   if (!name || !category) return res.status(400).json({ error: 'שם וקטגוריה הם שדות חובה' });
+  const zoom = parseFloat(imageZoom) || 100;
   try {
     if (USE_CLOUD) {
+      // preserve existing bestSeller when updating
+      const existing = await cloudinary.api.resource(`${FOLDER}/items/${req.params.id}`, { context: true });
+      const ctx = existing.context?.custom || {};
+      const newCtx = { ...ctx, name, description, category, imageZoom: String(zoom) };
       if (req.file) {
         const result = await uploadToCloudinary(req.file.buffer, {
           public_id: `${FOLDER}/items/${req.params.id}`,
           overwrite: true,
-          context: { name, description, category },
+          context: newCtx,
         });
-        return res.json({ id: req.params.id, name, description, category, image: result.secure_url });
+        return res.json({ id: req.params.id, name, description, category, imageZoom: zoom, image: result.secure_url });
       }
-      await cloudinary.api.update(`${FOLDER}/items/${req.params.id}`, { context: { name, description, category } });
+      await cloudinary.api.update(`${FOLDER}/items/${req.params.id}`, { context: newCtx });
       const r = await cloudinary.api.resource(`${FOLDER}/items/${req.params.id}`);
-      return res.json({ id: req.params.id, name, description, category, image: r.secure_url });
+      return res.json({ id: req.params.id, name, description, category, imageZoom: zoom, image: r.secure_url });
     }
     const items = readJSON(ITEMS_FILE);
     const idx = items.findIndex(i => i.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'פריט לא נמצא' });
     const oldImage = items[idx].image;
-    items[idx] = { ...items[idx], name, description, category };
+    items[idx] = { ...items[idx], name, description, category, imageZoom: zoom };
     if (req.file) {
-      const oldPath = path.join(__dirname, 'public', oldImage);
       if (oldImage.startsWith('/uploads/') && fs.existsSync(path.join(__dirname, oldImage.slice(1)))) {
         fs.unlinkSync(path.join(__dirname, oldImage.slice(1)));
       }

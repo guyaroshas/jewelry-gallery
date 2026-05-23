@@ -50,10 +50,10 @@ function renderItems(items) {
   items.forEach(item => {
     const card = document.createElement('div');
     card.className = 'item-card';
+    const zoom = item.imageZoom || 100;
+    const pos  = item.imagePosition || 'center center';
     card.innerHTML = `
-      <div class="item-img-wrap">
-        <img src="${item.image}" alt="${item.name}" loading="lazy" />
-      </div>
+      <div class="item-img-wrap" style="background-image:url('${item.image}');background-size:${zoom}%;background-position:${pos}"></div>
     `;
     card.addEventListener('click', () => openLightbox(item));
     grid.appendChild(card);

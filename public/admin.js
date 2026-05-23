@@ -178,7 +178,12 @@ function openEditModal(item) {
   editingId = item.id;
   document.getElementById('edit-name').value = item.name;
   document.getElementById('edit-desc').value = item.description || '';
-  document.getElementById('edit-preview-img').src = item.image;
+  const prevImg = document.getElementById('edit-preview-img');
+  prevImg.style.backgroundImage = `url(${item.image})`;
+  const zoom = item.imageZoom || 100;
+  prevImg.style.backgroundSize = zoom + '%';
+  document.getElementById('edit-zoom-input').value = zoom;
+  document.getElementById('edit-zoom-val').textContent = zoom + '%';
   document.getElementById('edit-preview').style.display = 'block';
   document.getElementById('edit-file-input').value = '';
   // Copy categories from the upload form select
@@ -189,6 +194,12 @@ function openEditModal(item) {
   document.getElementById('edit-modal').style.display = 'flex';
 }
 
+function updateEditZoom(input) {
+  const zoom = parseInt(input.value);
+  document.getElementById('edit-zoom-val').textContent = zoom + '%';
+  document.getElementById('edit-preview-img').style.backgroundSize = zoom + '%';
+}
+
 function closeEditModal() {
   document.getElementById('edit-modal').style.display = 'none';
   editingId = null;
@@ -197,7 +208,8 @@ function closeEditModal() {
 function editPreviewImage(event) {
   const file = event.target.files[0];
   if (!file) return;
-  document.getElementById('edit-preview-img').src = URL.createObjectURL(file);
+  const img = document.getElementById('edit-preview-img');
+  img.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
   document.getElementById('edit-preview').style.display = 'block';
 }
 
@@ -205,12 +217,14 @@ async function saveEdit() {
   const name = document.getElementById('edit-name').value.trim();
   const description = document.getElementById('edit-desc').value.trim();
   const category = document.getElementById('edit-category').value;
+  const imageZoom = document.getElementById('edit-zoom-input').value || 100;
   const file = document.getElementById('edit-file-input').files[0];
   if (!name || !category) { alert('יש למלא שם וקטגוריה'); return; }
   const formData = new FormData();
   formData.append('name', name);
   formData.append('description', description);
   formData.append('category', category);
+  formData.append('imageZoom', imageZoom);
   if (file) formData.append('image', file);
   const res = await fetch('/api/items/' + editingId, {
     method: 'PUT', headers: authHeaders(), body: formData,
@@ -225,8 +239,19 @@ function previewImage(event) {
   if (!file) return;
   const preview = document.getElementById('image-preview');
   const img = document.getElementById('preview-img');
-  img.src = URL.createObjectURL(file);
+  img.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
   preview.style.display = 'block';
+  // reset zoom and show controls
+  document.getElementById('upload-zoom-input').value = 100;
+  document.getElementById('upload-zoom-val').textContent = '100%';
+  img.style.backgroundSize = '100%';
+  document.getElementById('upload-zoom-controls').style.display = 'block';
+}
+
+function updateUploadZoom(input) {
+  const zoom = parseInt(input.value);
+  document.getElementById('upload-zoom-val').textContent = zoom + '%';
+  document.getElementById('preview-img').style.backgroundSize = zoom + '%';
 }
 
 // Drag-over style
@@ -252,6 +277,7 @@ async function uploadItem() {
   const description = document.getElementById('item-desc').value.trim();
   const category = document.getElementById('item-category').value;
   const bestSeller = document.getElementById('item-bestseller').checked;
+  const imageZoom  = document.getElementById('upload-zoom-input').value || 100;
   const msgEl = document.getElementById('upload-msg');
 
   if (!file || !name || !category) {
@@ -265,6 +291,7 @@ async function uploadItem() {
   formData.append('description', description);
   formData.append('category', category);
   formData.append('bestSeller', bestSeller);
+  formData.append('imageZoom', imageZoom);
 
   const res = await fetch('/api/items', {
     method: 'POST',
@@ -278,7 +305,10 @@ async function uploadItem() {
     document.getElementById('item-name').value = '';
     document.getElementById('item-desc').value = '';
     document.getElementById('item-bestseller').checked = false;
+    document.getElementById('upload-zoom-input').value = 100;
+    document.getElementById('upload-zoom-val').textContent = '100%';
     document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('upload-zoom-controls').style.display = 'none';
     setTimeout(() => (msgEl.innerHTML = ''), 3000);
     loadItems();
   } else {

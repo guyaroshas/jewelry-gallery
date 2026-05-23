@@ -167,21 +167,19 @@ main {
   position: relative;
 }
 
-.item-card:hover .item-img-wrap img {
-  transform: scale(1.05);
-}
-
 .item-img-wrap {
-  overflow: hidden;
-  background: var(--white);
-}
-
-.item-img-wrap img {
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease;
+  background-color: var(--white);
+  background-size: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  transition: filter 0.3s ease;
+}
+
+.item-card:hover .item-img-wrap {
+  filter: brightness(0.95);
 }
 
 .empty-msg {
@@ -411,6 +409,18 @@ textarea { resize: vertical; min-height: 80px; }
   max-height: 220px;
   object-fit: cover;
 }
+
+.preview-bg-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: var(--border);
+  border-radius: var(--radius);
+}
+
+.upload-zoom-controls { margin-top: 0.7rem; }
 
 .items-list { display: flex; flex-direction: column; gap: 0.6rem; }
 
