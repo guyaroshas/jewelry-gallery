@@ -53,7 +53,9 @@ function renderItems(items) {
     const zoom = item.imageZoom || 100;
     const pos  = item.imagePosition || 'center center';
     card.innerHTML = `
-      <div class="item-img-wrap" style="background-image:url('${item.image}');background-size:${zoom}%;background-position:${pos}"></div>
+      <div class="item-img-wrap" style="background-image:url('${item.image}');background-size:${zoom}%;background-position:${pos}">
+        ${item.bestSeller ? '<span class="bs-badge">★ Best Seller</span>' : ''}
+      </div>
     `;
     card.addEventListener('click', () => openLightbox(item));
     grid.appendChild(card);
