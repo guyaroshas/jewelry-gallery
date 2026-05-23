@@ -93,6 +93,29 @@ async function cloudSaveCategories(cats) {
   });
 }
 
+// ── Hero config in Cloudinary ─────────────────────────────────────────────
+const HERO_CONFIG_ID = `${FOLDER}/config/hero`;
+let heroCache = null;
+
+async function cloudGetHero() {
+  if (heroCache) return heroCache;
+  try {
+    const r = await cloudinary.api.resource(HERO_CONFIG_ID, { resource_type: 'raw' });
+    const res = await fetch(r.secure_url + '?_=' + Date.now());
+    heroCache = await res.json();
+  } catch {
+    heroCache = JSON.parse(JSON.stringify(DEFAULT_HERO));
+  }
+  return heroCache;
+}
+
+async function cloudSaveHero(hero) {
+  heroCache = hero;
+  await uploadToCloudinary(Buffer.from(JSON.stringify(hero)), {
+    public_id: HERO_CONFIG_ID, resource_type: 'raw', overwrite: true,
+  });
+}
+
 async function cloudGetItems() {
   const result = await cloudinary.api.resources({
     type: 'upload', prefix: `${FOLDER}/items/`, context: true, max_results: 500,
@@ -153,8 +176,10 @@ function readHero() {
   return h;
 }
 
-app.get('/api/hero', (req, res) => {
-  try { res.json(readHero()); } catch { res.json(DEFAULT_HERO); }
+app.get('/api/hero', async (req, res) => {
+  try {
+    res.json(USE_CLOUD ? await cloudGetHero() : readHero());
+  } catch { res.json(DEFAULT_HERO); }
 });
 
 // ── Auth routes ───────────────────────────────────────────────────────────────
@@ -237,16 +262,18 @@ app.put('/api/hero/:slot', requireAuth, upload.single('image'), async (req, res)
   if (isNaN(slot) || slot < 0 || slot > 2) return res.status(400).json({ error: 'slot לא תקין' });
   if (!req.file) return res.status(400).json({ error: 'חסרה תמונה' });
   try {
-    const hero = readHero();
+    const hero = USE_CLOUD ? await cloudGetHero() : readHero();
     const current = hero.slots[slot] || { position: 'center center', zoom: 100 };
     if (USE_CLOUD) {
       const result = await uploadToCloudinary(req.file.buffer, { public_id: `${FOLDER}/hero/${slot}`, overwrite: true });
       current.url = result.secure_url;
+      hero.slots[slot] = current;
+      await cloudSaveHero(hero);
     } else {
       current.url = '/uploads/' + req.file.filename;
+      hero.slots[slot] = current;
+      writeJSON(HERO_FILE, hero);
     }
-    hero.slots[slot] = current;
-    writeJSON(HERO_FILE, hero);
     res.json(current);
   } catch (err) { console.error(err); res.status(500).json({ error: 'שגיאה בהעלאה' }); }
 });
@@ -255,22 +282,22 @@ app.patch('/api/hero/:slot', requireAuth, async (req, res) => {
   const slot = parseInt(req.params.slot);
   if (isNaN(slot) || slot < 0 || slot > 2) return res.status(400).json({ error: 'slot לא תקין' });
   try {
-    const hero = readHero();
+    const hero = USE_CLOUD ? await cloudGetHero() : readHero();
     const current = hero.slots[slot] || { position: 'center center', zoom: 100 };
     if (req.body.position !== undefined) current.position = req.body.position;
     if (req.body.zoom     !== undefined) current.zoom     = parseFloat(req.body.zoom);
     hero.slots[slot] = current;
-    writeJSON(HERO_FILE, hero);
+    USE_CLOUD ? await cloudSaveHero(hero) : writeJSON(HERO_FILE, hero);
     res.json(current);
   } catch (err) { res.status(500).json({ error: 'שגיאה' }); }
 });
 
 app.patch('/api/hero', requireAuth, async (req, res) => {
   try {
-    const hero = readHero();
+    const hero = USE_CLOUD ? await cloudGetHero() : readHero();
     if (req.body.colLeft !== undefined) hero.colLeft = parseFloat(req.body.colLeft);
     if (req.body.rowTop  !== undefined) hero.rowTop  = parseFloat(req.body.rowTop);
-    writeJSON(HERO_FILE, hero);
+    USE_CLOUD ? await cloudSaveHero(hero) : writeJSON(HERO_FILE, hero);
     res.json({ colLeft: hero.colLeft, rowTop: hero.rowTop });
   } catch (err) { res.status(500).json({ error: 'שגיאה' }); }
 });
